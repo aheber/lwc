@@ -22,7 +22,7 @@ import { TemplateCompileResult, TemplateParseResult } from './shared/types';
 export * from './shared/types';
 export { Config } from './config';
 
-export function parse(source: string, config: Config = {}): TemplateParseResult {
+export function parse(source: string, config: Config): TemplateParseResult {
     const options = normalizeConfig(config);
     const state = new State(options);
     return parseTemplate(source, state);

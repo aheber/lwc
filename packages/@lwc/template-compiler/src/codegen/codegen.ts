@@ -68,6 +68,12 @@ export default class CodeGen {
     /** Indicates whether the generated code should preserve HTML comments or not. */
     readonly preserveComments: boolean;
 
+    /** Unique string for style scoping */
+    readonly stylesheetToken: string;
+
+    /** Filename of the template file */
+    readonly filename: string;
+
     /**
      * This flag indicates if the generated code should scope the template fragment id. It is set to
      * true if the template also contains ids.
@@ -113,6 +119,8 @@ export default class CodeGen {
         this.preserveComments =
             root.directives.find(isPreserveCommentsDirective)?.value.value ??
             config.preserveHtmlComments;
+        this.stylesheetToken = config.stylesheetToken;
+        this.filename = config.filename;
 
         this.scopeFragmentId = scopeFragmentId;
         this.scope = this.createScope();

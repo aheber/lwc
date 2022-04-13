@@ -39,6 +39,13 @@ export const TemplateErrors = {
         level: DiagnosticLevel.Error,
         url: '',
     },
+
+    MISSING_REQUIRED_OPTION: {
+        code: 1150,
+        message: 'Missing required option {0}',
+        level: DiagnosticLevel.Error,
+        url: '',
+    },
 };
 
 export const ParserDiagnostics = {

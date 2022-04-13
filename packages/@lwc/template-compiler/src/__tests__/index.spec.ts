@@ -16,7 +16,23 @@ describe('option validation', () => {
 
     it('throws for unknown compiler option', () => {
         expect(() => {
-            compiler(`<template></template>`, { foo: true } as any);
+            compiler(`<template></template>`, {
+                foo: true,
+                filename: 'file.html',
+                stylesheetToken: 'myToken',
+            } as any);
         }).toThrow(/Unknown option property foo/);
+    });
+
+    it('throws for missing required option stylesheetToken', () => {
+        expect(() => {
+            compiler(`<template></template>`, { filename: 'file.html' } as any);
+        }).toThrow(/Missing required option stylesheetToken/);
+    });
+
+    it('throws for missing required option filename', () => {
+        expect(() => {
+            compiler(`<template></template>`, { stylesheetToken: 'myToken' } as any);
+        }).toThrow(/Missing required option filename/);
     });
 });

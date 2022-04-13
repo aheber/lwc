@@ -4,16 +4,18 @@
  * SPDX-License-Identifier: MIT
  * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/MIT
  */
+import path from 'path';
 import * as t from '../../shared/estree';
 import { kebabcaseToCamelcase } from '../../shared/naming';
 import {
-    TEMPLATE_FUNCTION_NAME,
     SECURE_REGISTER_TEMPLATE_METHOD_NAME,
     LWC_MODULE_NAME,
+    SCOPED_STYLESHEETS_NAME,
+    STYLESHEETS_NAME,
 } from '../../shared/constants';
 
 import CodeGen from '../codegen';
-import { identifierFromComponentName, generateTemplateMetadata } from '../helpers';
+import { identifierFromComponentName, generateRegisterTemplateDeclaration } from '../helpers';
 import { optimizeStaticExpressions } from '../optimize';
 
 function generateComponentImports(codeGen: CodeGen): t.ImportDeclaration[] {
@@ -23,6 +25,21 @@ function generateComponentImports(codeGen: CodeGen): t.ImportDeclaration[] {
         return t.importDeclaration(
             [t.importDefaultSpecifier(localIdentifier)],
             t.literal(kebabcaseToCamelcase(name))
+        );
+    });
+}
+
+function generateStylesheetImports(codeGen: CodeGen): t.ImportDeclaration[] {
+    const { filename } = codeGen;
+    return [false, true].map((scoped) => {
+        const localIdentifier = t.identifier(scoped ? SCOPED_STYLESHEETS_NAME : STYLESHEETS_NAME);
+        const cssRelativePath = `./${path.basename(filename, path.extname(filename))}${
+            scoped ? '.scoped.css?scoped=true' : '.css'
+        }`;
+
+        return t.importDeclaration(
+            [t.importDefaultSpecifier(localIdentifier)],
+            t.literal(cssRelativePath)
         );
     });
 }
@@ -59,20 +76,18 @@ function generateLwcApisImport(codeGen: CodeGen): t.ImportDeclaration {
 export function format(templateFn: t.FunctionDeclaration, codeGen: CodeGen): t.Program {
     codeGen.usedLwcApis.add(SECURE_REGISTER_TEMPLATE_METHOD_NAME);
 
-    const imports = [...generateComponentImports(codeGen), generateLwcApisImport(codeGen)];
-
-    const metadata = generateTemplateMetadata(codeGen);
+    const imports = [
+        ...generateComponentImports(codeGen),
+        ...generateStylesheetImports(codeGen),
+        generateLwcApisImport(codeGen),
+    ];
 
     const optimizedTemplateDeclarations = optimizeStaticExpressions(templateFn);
 
     const templateBody = [
         ...optimizedTemplateDeclarations,
-        t.exportDefaultDeclaration(
-            t.callExpression(t.identifier(SECURE_REGISTER_TEMPLATE_METHOD_NAME), [
-                t.identifier(TEMPLATE_FUNCTION_NAME),
-            ])
-        ),
+        generateRegisterTemplateDeclaration(codeGen),
     ];
 
-    return t.program([...imports, ...templateBody, ...metadata]);
+    return t.program([...imports, ...templateBody]);
 }

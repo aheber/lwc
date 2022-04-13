@@ -15,7 +15,13 @@ import {
     isIf,
     isDynamicDirective,
 } from '../shared/ast';
-import { TEMPLATE_FUNCTION_NAME, TEMPLATE_PARAMS } from '../shared/constants';
+import {
+    SCOPED_STYLESHEETS_NAME,
+    SECURE_REGISTER_TEMPLATE_METHOD_NAME,
+    STYLESHEETS_NAME,
+    TEMPLATE_FUNCTION_NAME,
+    TEMPLATE_PARAMS,
+} from '../shared/constants';
 
 import CodeGen from './codegen';
 
@@ -154,6 +160,56 @@ export function generateTemplateMetadata(codeGen: CodeGen): t.Statement[] {
     }
 
     return metadataExpressions;
+}
+
+function genRenderMode(codeGen: CodeGen) {
+    const renderModeInteger = codeGen.renderMode === LWCDirectiveRenderMode.light ? 0 : 1;
+    return t.literal(renderModeInteger, {
+        trailingComments: [t.comment(`renderMode (0=light, 1=shadow`)],
+    });
+}
+
+function genSlots(codeGen: CodeGen) {
+    const trailingComments = [t.comment('slots')];
+    if (!codeGen.slotNames.size) {
+        return t.identifier('undefined', {
+            trailingComments,
+        });
+    }
+
+    return t.arrayExpression(
+        Array.from(codeGen.slotNames)
+            .sort()
+            .map((slot) => t.literal(slot)),
+        {
+            trailingComments,
+        }
+    );
+}
+
+function genStylesheetToken(codeGen: CodeGen) {
+    return t.literal(codeGen.stylesheetToken, {
+        trailingComments: [t.comment('stylesheetToken')],
+    });
+}
+
+function genStylesheets(scoped: boolean) {
+    return t.identifier(scoped ? SCOPED_STYLESHEETS_NAME : STYLESHEETS_NAME, {
+        trailingComments: [t.comment(scoped ? 'Scoped stylesheets' : 'Stylesheets')],
+    });
+}
+
+export function generateRegisterTemplateDeclaration(codeGen: CodeGen) {
+    return t.exportDefaultDeclaration(
+        t.callExpression(t.identifier(SECURE_REGISTER_TEMPLATE_METHOD_NAME), [
+            t.identifier(TEMPLATE_FUNCTION_NAME),
+            genRenderMode(codeGen),
+            genSlots(codeGen),
+            genStylesheetToken(codeGen),
+            genStylesheets(false),
+            genStylesheets(true),
+        ])
+    );
 }
 
 const DECLARATION_DELIMITER = /;(?![^(]*\))/g;

@@ -16,3 +16,6 @@ export const TEMPLATE_PARAMS: { [label: string]: string } = {
     SLOT_SET: '$slotset',
     CONTEXT: '$ctx',
 };
+
+export const STYLESHEETS_NAME = '_implicitStylesheets';
+export const SCOPED_STYLESHEETS_NAME = '_implicitScopedStylesheets';

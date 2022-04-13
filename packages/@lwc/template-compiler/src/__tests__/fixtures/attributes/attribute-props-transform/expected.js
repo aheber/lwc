@@ -1,4 +1,6 @@
 import _xFoo from "x/foo";
+import _implicitStylesheets from "./component.css";
+import _implicitScopedStylesheets from "./component.scoped.css?scoped=true";
 import { registerTemplate } from "lwc";
 function tmpl($api, $cmp, $slotset, $ctx) {
   const { gid: api_scoped_id, c: api_custom_element } = $api;
@@ -74,4 +76,11 @@ function tmpl($api, $cmp, $slotset, $ctx) {
   ];
   /*LWC compiler vX.X.X*/
 }
-export default registerTemplate(tmpl);
+export default registerTemplate(
+  tmpl,
+  1,
+  undefined,
+  "myToken",
+  _implicitStylesheets,
+  _implicitScopedStylesheets
+);

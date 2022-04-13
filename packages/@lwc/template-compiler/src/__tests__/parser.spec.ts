@@ -19,7 +19,10 @@ const EXPECTED_LOCATION = expect.objectContaining({
 });
 
 function parseTemplate(src: string): any {
-    const config = normalizeConfig({});
+    const config = normalizeConfig({
+        stylesheetToken: 'myToken',
+        filename: 'component.html',
+    });
     const state = new State(config);
 
     const res = parse(src, state);

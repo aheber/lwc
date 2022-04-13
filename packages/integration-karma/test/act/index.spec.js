@@ -119,6 +119,27 @@ describe('ACTCompiler', () => {
         return component;
     }
 
+    let consoleError;
+
+    // Ignore console errors about dynamically changing the stylesheets
+    // or stylesheetToken. The ACT compiler just does this.
+    beforeEach(() => {
+        // eslint-disable-next-line no-console
+        consoleError = console.error;
+        // eslint-disable-next-line no-console
+        console.error = function (str) {
+            if (!/Dynamically setting the/.test(str)) {
+                consoleError.apply(this, arguments);
+            }
+        };
+    });
+
+    afterEach(() => {
+        // eslint-disable-next-line no-console
+        console.error = consoleError;
+        consoleError = undefined;
+    });
+
     it('props', () => {
         const component = createAndInsertActComponent(testProps);
 
