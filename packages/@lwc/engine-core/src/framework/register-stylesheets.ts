@@ -9,6 +9,7 @@ import { Template } from './template';
 import { TemplateStylesheetFactories } from './stylesheet';
 import { flattenStylesheets } from './utils';
 import { checkVersionMismatch } from './check-version-mismatch';
+import { logError } from '../shared/logger';
 
 export function registerStylesheets(
     tmpl: Template,
@@ -34,8 +35,7 @@ export function registerStylesheets(
                     return value;
                 },
                 set(newValue) {
-                    // eslint-disable-next-line no-console
-                    console.error(
+                    logError(
                         `Dynamically setting the "${prop}" property on a template function ` +
                             `is deprecated and may be removed in a future version of LWC.`
                     );
