@@ -1,3 +1,5 @@
+import { LightningElementConstructor } from './framework/base-lightning-element';
+
 /*
  * Copyright (c) 2018, salesforce.com, inc.
  * All rights reserved.
@@ -266,14 +268,13 @@ export function setAssertInstanceOfHTMLElement(
     assertInstanceOfHTMLElement = assertInstanceOfHTMLElementImpl;
 }
 
-type defineCustomElementFunc = (
+type defineLightningElementFunc = (
     name: string,
-    constructor: CustomElementConstructor,
-    options?: ElementDefinitionOptions
-) => void;
-export let defineCustomElement: defineCustomElementFunc;
-export function setDefineCustomElement(defineCustomElementImpl: defineCustomElementFunc) {
-    defineCustomElement = defineCustomElementImpl;
+    constructor: LightningElementConstructor
+) => CustomElementConstructor;
+export let defineLightningElement: defineLightningElementFunc;
+export function setDefineLightningElement(defineLightningElementImpl: defineLightningElementFunc) {
+    defineLightningElement = defineLightningElementImpl;
 }
 
 type getCustomElementFunc = (name: string) => CustomElementConstructor | undefined;

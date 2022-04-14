@@ -10,8 +10,8 @@ import {
     connectRootElement,
     disconnectRootElement,
     LightningElement,
-    getUpgradableConstructor,
 } from '@lwc/engine-core';
+import { defineLightningElement, getCustomElement } from '../renderer';
 
 // TODO [#2472]: Remove this workaround when appropriate.
 // eslint-disable-next-line lwc-internal/no-global-node
@@ -93,7 +93,8 @@ export function createElement(
         );
     }
 
-    const UpgradableConstructor = getUpgradableConstructor(sel);
+    sel = sel.toLowerCase();
+    const UpgradableConstructor = getCustomElement(sel) || defineLightningElement(sel, Ctor);
     let wasComponentUpgraded: boolean = false;
     // the custom element from the registry is expecting an upgrade callback
     /**

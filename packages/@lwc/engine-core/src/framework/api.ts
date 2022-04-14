@@ -42,6 +42,7 @@ import {
     VElementData,
     VNodeType,
 } from './vnodes';
+import { getUpgradableConstructor } from './upgradable-element';
 
 const SymbolIterator: typeof Symbol.iterator = Symbol.iterator;
 
@@ -158,14 +159,14 @@ function s(
 // [c]ustom element node
 function c(
     sel: string,
-    Ctor: LightningElementConstructor,
+    ctor: LightningElementConstructor | CustomElementConstructor,
     data: VElementData,
     children: VNodes = EmptyArray
 ): VCustomElement {
     const vmBeingRendered = getVMBeingRendered()!;
     if (process.env.NODE_ENV !== 'production') {
         assert.isTrue(isString(sel), `c() 1st argument sel must be a string.`);
-        assert.isTrue(isFunction(Ctor), `c() 2nd argument Ctor must be a function.`);
+        assert.isTrue(isFunction(ctor), `c() 2nd argument Ctor must be a function.`);
         assert.isTrue(isObject(data), `c() 3nd argument data must be an object.`);
         assert.isTrue(
             arguments.length === 3 || isArray(children),
@@ -202,6 +203,10 @@ function c(
     }
     const { key } = data;
     let elm, aChildren, vm;
+
+    // Temporary registration until compiler can take care of this
+    const CE = getUpgradableConstructor(sel, ctor);
+
     const vnode: VCustomElement = {
         type: VNodeType.CustomElement,
         sel,
@@ -210,7 +215,9 @@ function c(
         elm,
         key,
 
-        ctor: Ctor,
+        CE,
+        // The only reason to keep this around is that createVM would need this to get definition
+        ctor: ctor as LightningElementConstructor,
         owner: vmBeingRendered,
         mode: 'open', // TODO [#1294]: this should be defined in Ctor
         aChildren,

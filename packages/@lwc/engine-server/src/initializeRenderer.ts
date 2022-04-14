@@ -11,7 +11,7 @@ import {
     setCreateComment,
     setCreateElement,
     setCreateText,
-    setDefineCustomElement,
+    setDefineLightningElement,
     setDispatchEvent,
     setGetAttribute,
     setGetBoundingClientRect,
@@ -54,7 +54,7 @@ import {
     createComment,
     createElement,
     createText,
-    defineCustomElement,
+    defineLightningElement,
     dispatchEvent,
     getAttribute,
     getBoundingClientRect,
@@ -96,7 +96,7 @@ setAttachShadow(attachShadow);
 setCreateComment(createComment);
 setCreateElement(createElement);
 setCreateText(createText);
-setDefineCustomElement(defineCustomElement);
+setDefineLightningElement(defineLightningElement);
 setDispatchEvent(dispatchEvent);
 setGetAttribute(getAttribute);
 setGetBoundingClientRect(getBoundingClientRect);

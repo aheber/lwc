@@ -5,6 +5,7 @@
  * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/MIT
  */
 
+import { LightningElementConstructor } from './base-lightning-element';
 import { VM } from './vm';
 
 export type Key = string | number;
@@ -57,7 +58,9 @@ export interface VElement extends VBaseElement {
 export interface VCustomElement extends VBaseElement {
     type: VNodeType.CustomElement;
     mode: 'closed' | 'open';
-    ctor: any;
+    CE: CustomElementConstructor;
+    // The only reason to keep this ref around is createVM who needs to extract the definition
+    ctor: LightningElementConstructor;
     aChildren: VNodes | undefined;
     vm: VM | undefined;
 }

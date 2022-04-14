@@ -32,7 +32,6 @@ import {
 
 import { EmptyArray } from './utils';
 import { markComponentAsDirty } from './component';
-import { getUpgradableConstructor } from './upgradable-element';
 import { patchElementWithRestrictions, unlockDomMutation, lockDomMutation } from './restrictions';
 import {
     createVM,
@@ -196,9 +195,8 @@ function patchElement(n1: VElement, n2: VElement) {
 }
 
 function mountCustomElement(vnode: VCustomElement, parent: ParentNode, anchor: Node | null) {
-    const { sel, owner } = vnode;
+    const { CE: UpgradableConstructor, owner } = vnode;
 
-    const UpgradableConstructor = getUpgradableConstructor(sel);
     /**
      * Note: if the upgradable constructor does not expect, or throw when we new it
      * with a callback as the first argument, we could implement a more advanced
@@ -217,8 +215,6 @@ function mountCustomElement(vnode: VCustomElement, parent: ParentNode, anchor: N
 
     if (vm) {
         allocateChildren(vnode, vm);
-    } else if (vnode.ctor !== UpgradableConstructor) {
-        throw new TypeError(`Incorrect Component Constructor`);
     }
 
     patchElementPropsAndAttrs(null, vnode);

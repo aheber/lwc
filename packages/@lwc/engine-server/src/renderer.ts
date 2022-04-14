@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: MIT
  * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/MIT
  */
+import { LightningElementConstructor } from '@lwc/engine-core/types/framework/base-lightning-element';
 import {
     isUndefined,
     isNull,
@@ -14,6 +15,7 @@ import {
     StringToLowerCase,
     htmlPropertyToAttribute,
     noop,
+    isFunction,
 } from '@lwc/shared';
 
 import { HostNode, HostElement, HostAttribute, HostNodeType } from './types';
@@ -389,12 +391,25 @@ export const getLastElementChild = unsupportedMethod('getLastElementChild') as (
     element: HostElement
 ) => HostElement | null;
 
-export function defineCustomElement(
+export function defineLightningElement(
     name: string,
-    constructor: CustomElementConstructor,
-    _options?: ElementDefinitionOptions
-) {
-    registerCustomElement(name, constructor);
+    _constructor: LightningElementConstructor
+): CustomElementConstructor {
+    /**
+     * LWCUpgradableElement is a CustomElementConstructor that can be created
+     * by the LWC framework itself while providing an upgradable callback argument
+     * to hook into the construction phase of the custom element.
+     */
+    const CE = class LWCUpgradableElement extends HTMLElementExported {
+        constructor(upgradeCallback?: (elm: HTMLElement) => void) {
+            super();
+            if (isFunction(upgradeCallback)) {
+                upgradeCallback(this); // nothing to do with the result for now
+            }
+        }
+    };
+    registerCustomElement(name, CE);
+    return CE;
 }
 
 export function getCustomElement(name: string): CustomElementConstructor | undefined {

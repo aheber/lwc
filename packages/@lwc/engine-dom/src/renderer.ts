@@ -5,6 +5,7 @@
  * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/MIT
  */
 
+import { LightningElementConstructor } from '@lwc/engine-core/types/framework/base-lightning-element';
 import {
     assert,
     create,
@@ -46,8 +47,8 @@ const styleSheets: { [content: string]: CSSStyleSheet } = create(null);
 const shadowRootsToStyleSheets = new WeakMap<ShadowRoot, { [content: string]: true }>();
 
 export let getCustomElement: any;
-export let defineCustomElement: any;
-let HTMLElementConstructor;
+export let defineLightningElement: any;
+let HTMLElementConstructor: typeof HTMLElement;
 
 function isCustomElementRegistryAvailable() {
     if (typeof customElements === 'undefined') {
@@ -121,24 +122,37 @@ function insertStyleElement(content: string, target: ShadowRoot) {
 
 if (isCustomElementRegistryAvailable()) {
     getCustomElement = customElements.get.bind(customElements);
-    defineCustomElement = customElements.define.bind(customElements);
+    defineLightningElement = function define(
+        name: string,
+        _ctor: LightningElementConstructor
+    ): CustomElementConstructor {
+        /**
+         * LWCUpgradableElement is a CustomElementConstructor that can be created
+         * by the LWC framework itself while providing an upgradable callback argument
+         * to hook into the construction phase of the custom element.
+         */
+        const CE = class LWCUpgradableElement extends HTMLElement {
+            constructor(upgradeCallback?: (elm: HTMLElement) => void) {
+                super();
+                if (isFunction(upgradeCallback)) {
+                    upgradeCallback(this); // nothing to do with the result for now
+                }
+            }
+        };
+        customElements.define(name, CE);
+        return CE;
+    };
+
     HTMLElementConstructor = HTMLElement;
 } else {
     const registry: Record<string, CustomElementConstructor> = create(null);
     const reverseRegistry: WeakMap<CustomElementConstructor, string> = new WeakMap();
 
-    defineCustomElement = function define(name: string, ctor: CustomElementConstructor) {
-        if (name !== StringToLowerCase.call(name) || registry[name]) {
-            throw new TypeError(`Invalid Registration`);
-        }
-        registry[name] = ctor;
-        reverseRegistry.set(ctor, name);
-    };
-
     getCustomElement = function get(name: string): CustomElementConstructor | undefined {
         return registry[name];
     };
 
+    // @ts-ignore this is a quirk in IE11 that forces us to use a different mechanism for HTMLElement
     HTMLElementConstructor = function HTMLElement(this: HTMLElement) {
         if (!(this instanceof HTMLElement)) {
             throw new TypeError(`Invalid Invocation`);
@@ -153,6 +167,32 @@ if (isCustomElementRegistryAvailable()) {
         return elm;
     };
     HTMLElementConstructor.prototype = HTMLElement.prototype;
+
+    defineLightningElement = function define(
+        name: string,
+        _ctor: LightningElementConstructor
+    ): CustomElementConstructor {
+        if (name !== StringToLowerCase.call(name) || registry[name]) {
+            throw new TypeError(`Invalid Registration`);
+        }
+        /**
+         * LWCUpgradableElement is a CustomElementConstructor that can be created
+         * by the LWC framework itself while providing an upgradable callback argument
+         * to hook into the construction phase of the custom element.
+         */
+        const CE = class LWCUpgradableElement extends HTMLElementConstructor {
+            constructor(upgradeCallback?: (elm: HTMLElement) => void) {
+                super();
+                if (isFunction(upgradeCallback)) {
+                    upgradeCallback(this); // nothing to do with the result for now
+                }
+            }
+        } as CustomElementConstructor;
+
+        registry[name] = CE;
+        reverseRegistry.set(CE, name);
+        return CE;
+    };
 }
 
 let hydrating = false;
