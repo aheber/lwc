@@ -12,8 +12,7 @@ describe('registerStylesheets', () => {
         expect(() => {
             template.stylesheetToken = 'newToken';
         }).toLogErrorDev(
-            'Dynamically setting the "stylesheetToken" property on a template function ' +
-                'is deprecated and may be removed in a future version of LWC.'
+            /Dynamically setting the "stylesheetToken" property on a template function is deprecated and may be removed in a future version of LWC./
         );
 
         expect(template.stylesheetToken).toEqual('newToken');
