@@ -31,8 +31,7 @@ describe('registerStylesheets', () => {
         expect(() => {
             template.stylesheets = [newStylesheet];
         }).toLogErrorDev(
-            'Dynamically setting the "stylesheets" property on a template function ' +
-                'is deprecated and may be removed in a future version of LWC.'
+            /Dynamically setting the "stylesheets" property on a template function is deprecated and may be removed in a future version of LWC./
         );
 
         expect(template.stylesheets.length).toEqual(1);
