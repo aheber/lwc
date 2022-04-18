@@ -1,11 +1,11 @@
 // TODO [#1284]: Import this from the lwc module once we move validation from compiler to linter
-const { registerTemplate } = LWC;
+const { registerTemplate, registerStylesheets } = LWC;
 
-describe('setting template stylesheets and tokens', () => {
+describe('registerStylesheets', () => {
     it('should warn when setting tmpl.stylesheetToken', () => {
-        const template = () => [];
+        const template = registerTemplate(() => []);
         const stylesheet = () => 'div { color: red }';
-        registerTemplate(template, 1, undefined, 'myToken', [stylesheet]);
+        registerStylesheets(template, 'myToken', [stylesheet]);
 
         expect(template.stylesheetToken).toEqual('myToken');
 
@@ -19,9 +19,9 @@ describe('setting template stylesheets and tokens', () => {
     });
 
     it('should warn when setting tmpl.stylesheets', () => {
-        const template = () => [];
+        const template = registerTemplate(() => []);
         const stylesheet = () => 'div { color: red }';
-        registerTemplate(template, 1, undefined, 'myToken', [stylesheet]);
+        registerStylesheets(template, 'myToken', [stylesheet]);
 
         expect(template.stylesheets.length).toEqual(1);
         expect(template.stylesheets[0]).toBe(stylesheet);

@@ -17,21 +17,6 @@ import compile from '@lwc/template-compiler';
 import { NormalizedTransformOptions } from '../options';
 import { TransformResult } from './transformer';
 
-type CreateStylesheetTokenOptions = {
-    name: string | undefined;
-    namespace: string | undefined;
-    filename: string;
-};
-
-function createStylesheetToken({ name, namespace, filename }: CreateStylesheetTokenOptions) {
-    return (
-        `${namespace}-${name}_${path.basename(filename, path.extname(filename))}`
-            // Minimal escape for strings containing the "@" character, which is disallowed in CSS selectors
-            // and at the beginning of attribute names
-            .replace(/@/g, '___at___')
-    );
-}
-
 /**
  * Transforms a HTML template into module exporting a template function.
  * The transform also add a style import for the default stylesheet associated with
@@ -44,19 +29,12 @@ export default function templateTransform(
 ): TransformResult {
     const { experimentalDynamicComponent, preserveHtmlComments } = options;
     const experimentalDynamicDirective = Boolean(experimentalDynamicComponent);
-    const stylesheetToken = createStylesheetToken({
-        filename,
-        name: options.name,
-        namespace: options.namespace,
-    });
 
     let result;
     try {
         result = compile(src, {
             experimentalDynamicDirective,
             preserveHtmlComments,
-            stylesheetToken,
-            filename,
         });
     } catch (e) {
         throw normalizeToCompilerError(TransformerErrors.HTML_TRANSFORMER_ERROR, e, { filename });
@@ -70,7 +48,36 @@ export default function templateTransform(
     // Rollup only cares about the mappings property on the map. Since producing a source map for
     // the template doesn't make sense, the transform returns an empty mappings.
     return {
-        code: result.code,
+        code: serialize(result.code, filename, options),
         map: { mappings: '' },
     };
+}
+
+function escapeScopeToken(input: string) {
+    // Minimal escape for strings containing the "@" character, which is disallowed in CSS selectors
+    // and at the beginning of attribute names
+    return input.replace(/@/g, '___at___');
+}
+
+function serialize(
+    code: string,
+    filename: string,
+    { namespace, name }: NormalizedTransformOptions
+): string {
+    const cssRelPath = `./${path.basename(filename, path.extname(filename))}.css`;
+    const scopedCssRelPath = `./${path.basename(filename, path.extname(filename))}.scoped.css`;
+    const scopeToken = escapeScopeToken(
+        `${namespace}-${name}_${path.basename(filename, path.extname(filename))}`
+    );
+    let buffer = '';
+    buffer += `import { registerStylesheets } from "lwc";\n`;
+    buffer += `import _implicitStylesheets from "${cssRelPath}";\n`;
+    buffer += `import _implicitScopedStylesheets from "${scopedCssRelPath}?scoped=true";\n\n`;
+    buffer += code;
+    buffer += '\n\n';
+    buffer += 'if (_implicitStylesheets || _implicitScopedStylesheets) {\n';
+    buffer += `  registerStylesheets(tmpl, "${scopeToken}", _implicitStylesheets, _implicitScopedStylesheets);\n`;
+    buffer += '}\n';
+
+    return buffer;
 }

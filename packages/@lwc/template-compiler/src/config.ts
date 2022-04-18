@@ -24,14 +24,6 @@ export interface Config {
      * When true, HTML comments in the template will be preserved.
      */
     preserveHtmlComments?: boolean;
-    /**
-     * Unique string to use for style scoping.
-     */
-    stylesheetToken: string;
-    /**
-     * Filename of the template file to transform.
-     */
-    filename: string;
 }
 
 export type NormalizedConfig = Required<Config>;
@@ -40,11 +32,7 @@ const AVAILABLE_OPTION_NAMES = new Set([
     'experimentalComputedMemberExpression',
     'experimentalDynamicDirective',
     'preserveHtmlComments',
-    'stylesheetToken',
-    'filename',
 ]);
-
-const REQUIRED_OPTION_NAMES = ['stylesheetToken', 'filename'] as const;
 
 export function normalizeConfig(config: Config): NormalizedConfig {
     invariant(
@@ -55,14 +43,6 @@ export function normalizeConfig(config: Config): NormalizedConfig {
     for (const property in config) {
         if (!AVAILABLE_OPTION_NAMES.has(property) && hasOwnProperty.call(config, property)) {
             throw generateCompilerError(TemplateErrors.UNKNOWN_OPTION_PROPERTY, {
-                messageArgs: [property],
-            });
-        }
-    }
-
-    for (const property of REQUIRED_OPTION_NAMES) {
-        if (!config[property]) {
-            throw generateCompilerError(TemplateErrors.MISSING_REQUIRED_OPTION, {
                 messageArgs: [property],
             });
         }

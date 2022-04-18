@@ -21,12 +21,9 @@ describe('fixtures', () => {
         ({ src, dirname }) => {
             const configPath = path.resolve(dirname, 'config.json');
 
-            const config: Config = {
-                filename: 'component.html',
-                stylesheetToken: 'myToken',
-            };
+            let config: Config = {};
             if (fs.existsSync(configPath)) {
-                Object.assign(config, require(configPath));
+                config = require(configPath);
             }
 
             const compiled = compiler(src, config);
