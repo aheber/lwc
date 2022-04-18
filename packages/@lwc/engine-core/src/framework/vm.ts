@@ -43,6 +43,7 @@ import { connectWireAdapters, disconnectWireAdapters, installWireAdapters } from
 import { AccessorReactiveObserver } from './decorators/api';
 import { removeActiveVM } from './hot-swaps';
 import { VNodes, VCustomElement, VNode, VNodeType } from './vnodes';
+import { getStylesheetsContent, unrenderStylesheet } from './stylesheet';
 
 type ShadowRootMode = 'open' | 'closed';
 
@@ -216,6 +217,15 @@ export function appendVM(vm: VM) {
     rehydrate(vm);
 }
 
+function removeStyles(vm: VM) {
+    // Remove any styles used by this template when disconnecting
+    const { cmpTemplate } = vm;
+    if (!isNull(cmpTemplate)) {
+        const stylesheets = getStylesheetsContent(vm, cmpTemplate);
+        unrenderStylesheet(vm, stylesheets);
+    }
+}
+
 // just in case the component comes back, with this we guarantee re-rendering it
 // while preventing any attempt to rehydration until after reinsertion.
 function resetComponentStateWhenRemoved(vm: VM) {
@@ -233,6 +243,7 @@ function resetComponentStateWhenRemoved(vm: VM) {
         // Spec: https://dom.spec.whatwg.org/#concept-node-remove (step 14-15)
         runChildNodesDisconnectedCallback(vm);
         runLightChildNodesDisconnectedCallback(vm);
+        removeStyles(vm);
     }
 
     if (process.env.NODE_ENV !== 'production') {
@@ -644,7 +655,7 @@ function recursivelyDisconnectChildren(vnodes: VNodes) {
 // into snabbdom. Especially useful when the reset is a consequence of an error, in which case the
 // children VNodes might not be representing the current state of the DOM.
 export function resetComponentRoot(vm: VM) {
-    const { children, renderRoot } = vm;
+    const { children, renderRoot, cmpTemplate } = vm;
 
     for (let i = 0, len = children.length; i < len; i++) {
         const child = children[i];
@@ -657,6 +668,11 @@ export function resetComponentRoot(vm: VM) {
 
     runChildNodesDisconnectedCallback(vm);
     vm.velements = EmptyArray;
+
+    if (!isNull(cmpTemplate)) {
+        const stylesheets = getStylesheetsContent(vm, cmpTemplate);
+        unrenderStylesheet(vm, stylesheets);
+    }
 }
 
 export function scheduleRehydration(vm: VM) {

@@ -88,6 +88,8 @@ export {
     setRemove,
     setRemoveAttribute,
     setRemoveEventListener,
+    setRemoveStylesheet,
+    setRemoveGlobalStylesheet,
     setSetAttribute,
     setSetCSSStyleProperty,
     setSetProperty,
