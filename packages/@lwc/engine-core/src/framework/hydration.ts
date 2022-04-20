@@ -27,6 +27,7 @@ import {
     LwcDomMode,
     VM,
     runRenderedCallback,
+    getAssociatedVMIfPresent,
 } from './vm';
 import {
     VNodes,
@@ -200,11 +201,14 @@ function hydrateCustomElement(elm: Node, vnode: VCustomElement): Node | null {
 
     const { sel, mode, ctor, owner } = vnode;
 
-    const vm = createVM(elm, ctor, {
-        mode,
-        owner,
-        tagName: sel,
-    });
+    // There is a possibility that a custom element is registered under tagName.
+    const vm =
+        getAssociatedVMIfPresent(elm) ||
+        createVM(elm, ctor, {
+            mode,
+            owner,
+            tagName: sel,
+        });
 
     vnode.elm = elm;
     vnode.vm = vm;

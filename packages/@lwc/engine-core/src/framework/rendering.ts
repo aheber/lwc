@@ -209,6 +209,16 @@ function mountCustomElement(vnode: VCustomElement, parent: ParentNode, anchor: N
         vm = createViewModelHook(elm, vnode);
     });
 
+    setScopeTokenClassIfNecessary(elm, owner);
+    if (owner.shadowMode === ShadowMode.Synthetic) {
+        const { stylesheetToken } = owner.context;
+        // when running in synthetic shadow mode, we need to set the shadowToken value
+        // into each element from the template, so they can be styled accordingly.
+        if (!isUndefined(stylesheetToken)) {
+            setElementShadowToken(elm, stylesheetToken);
+        }
+    }
+
     linkNodeToShadow(elm, owner);
     vnode.elm = elm;
     vnode.vm = vm;
@@ -453,32 +463,16 @@ export function allocateChildren(vnode: VCustomElement, vm: VM) {
 }
 
 function createViewModelHook(elm: HTMLElement, vnode: VCustomElement): VM {
-    let vm = getAssociatedVMIfPresent(elm);
-
-    // There is a possibility that a custom element is registered under tagName, in which case, the
-    // initialization is already carry on, and there is nothing else to do here since this hook is
-    // called right after invoking `document.createElement`.
-    if (!isUndefined(vm)) {
-        return vm;
-    }
-
+    // There is a possibility that a custom element is registered under tagName.
     const { sel, mode, ctor, owner } = vnode;
 
-    setScopeTokenClassIfNecessary(elm, owner);
-    if (owner.shadowMode === ShadowMode.Synthetic) {
-        const { stylesheetToken } = owner.context;
-        // when running in synthetic shadow mode, we need to set the shadowToken value
-        // into each element from the template, so they can be styled accordingly.
-        if (!isUndefined(stylesheetToken)) {
-            setElementShadowToken(elm, stylesheetToken);
-        }
-    }
-
-    vm = createVM(elm, ctor, {
-        mode,
-        owner,
-        tagName: sel,
-    });
+    const vm =
+        getAssociatedVMIfPresent(elm) ||
+        createVM(elm, ctor, {
+            mode,
+            owner,
+            tagName: sel,
+        });
 
     if (process.env.NODE_ENV !== 'production') {
         assert.isTrue(
